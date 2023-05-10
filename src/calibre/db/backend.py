@@ -1352,8 +1352,8 @@ class DB:
         '''
         book_id = BOOK_ID_PATH_TEMPLATE.format(book_id)
         l = self.PATH_LIMIT - (len(book_id) // 2) - 2
-        author = ascii_filename(author)[:l]
-        title  = ascii_filename(title.lstrip())[:l].rstrip()
+        author = author[:l]
+        title  = title.lstrip()[:l].rstrip()
         if not title:
             title = 'Unknown'[:l]
         try:
@@ -1362,7 +1362,7 @@ class DB:
         except IndexError:
             author = ''
         if not author:
-            author = ascii_filename(_('Unknown'))
+            author = _('Unknown')
         if author.upper() in WINDOWS_RESERVED_NAMES:
             author += 'w'
         return f'{author}/{title}{book_id}'
@@ -1379,15 +1379,15 @@ class DB:
         l = (self.PATH_LIMIT - (extlen // 2) - 2) if iswindows else ((self.PATH_LIMIT - extlen - 2) // 2)
         if l < 5:
             raise ValueError('Extension length too long: %d' % extlen)
-        author = ascii_filename(author)[:l]
-        title  = ascii_filename(title.lstrip())[:l].rstrip()
+        author = author[:l]
+        title  = title.lstrip()[:l].rstrip()
         if not title:
             title = 'Unknown'[:l]
         name   = title + ' - ' + author
         while name.endswith('.'):
             name = name[:-1]
         if not name:
-            name = ascii_filename(_('Unknown'))
+            name = _('Unknown')
         return name
 
     # Database layer API {{{

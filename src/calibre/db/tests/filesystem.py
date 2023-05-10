@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 
-__license__   = 'GPL v3'
+__license__ = 'GPL v3'
 __copyright__ = '2013, Kovid Goyal <kovid at kovidgoyal.net>'
 __docformat__ = 'restructuredtext en'
 
@@ -14,6 +14,18 @@ from calibre.ptempfile import TemporaryDirectory
 
 
 class FilesystemTest(BaseTest):
+
+    def test_thales(self):
+        print("\n\n======= ****** start my test ****** =======\n\n")
+
+        bookid = 1
+
+        cache = self.init_cache()
+        cache.update_path([bookid], False)
+        orig_fpath = cache.format_abspath(bookid, 'FMT1')
+        print(orig_fpath)
+
+        print("\n\n======= ****** end my test ****** =======\n\n")
 
     def get_filesystem_data(self, cache, book_id):
         fmts = cache.field_for('formats', book_id)
@@ -34,20 +46,20 @@ class FilesystemTest(BaseTest):
         ae, af, sf = self.assertEqual, self.assertFalse, cache.set_field
 
         # Test that changing metadata on a book with no formats/cover works
-        ae(sf('title', {3:'moved1'}), {3})
-        ae(sf('authors', {3:'moved1'}), {3})
-        ae(sf('title', {3:'Moved1'}), {3})
-        ae(sf('authors', {3:'Moved1'}), {3})
+        ae(sf('title', {3: 'moved1'}), {3})
+        ae(sf('authors', {3: 'moved1'}), {3})
+        ae(sf('title', {3: 'Moved1'}), {3})
+        ae(sf('authors', {3: 'Moved1'}), {3})
         ae(cache.field_for('title', 3), 'Moved1')
         ae(cache.field_for('authors', 3), ('Moved1',))
 
         # Now try with a book that has covers and formats
         orig_data = self.get_filesystem_data(cache, 1)
         orig_fpath = cache.format_abspath(1, 'FMT1')
-        ae(sf('title', {1:'moved'}), {1})
-        ae(sf('authors', {1:'moved'}), {1})
-        ae(sf('title', {1:'Moved'}), {1})
-        ae(sf('authors', {1:'Moved'}), {1})
+        ae(sf('title', {1: 'moved'}), {1})
+        ae(sf('authors', {1: 'moved'}), {1})
+        ae(sf('title', {1: 'Moved'}), {1})
+        ae(sf('authors', {1: 'Moved'}), {1})
         ae(cache.field_for('title', 1), 'Moved')
         ae(cache.field_for('authors', 1), ('Moved',))
         cache2 = self.init_cache(cl)
@@ -68,6 +80,7 @@ class FilesystemTest(BaseTest):
             self.assertIn(part, os.listdir(base))
 
         initial_side_data = {}
+
         def init_cache():
             nonlocal cache, initial_side_data
             cache = self.init_cache(self.cloned_library)
@@ -106,7 +119,8 @@ class FilesystemTest(BaseTest):
         fname = cache.fields['formats'].table.fname_map[1]['FMT1']
         cache.fields['formats'].table.fname_map[1]['FMT1'] = 'some thing else'
         cache.fields['formats'].table.fname_map[1]['FMT2'] = fname.upper()
-        cache.backend.update_path(1, cache.field_for('title', 1), cache.field_for('authors', 1)[0], cache.fields['path'], cache.fields['formats'])
+        cache.backend.update_path(1, cache.field_for('title', 1), cache.field_for('authors', 1)[0],
+                                  cache.fields['path'], cache.fields['formats'])
         check_that_filesystem_and_db_entries_match(1)
 
         # test a case only change
@@ -128,7 +142,6 @@ class FilesystemTest(BaseTest):
         cache.set_metadata(1, Metadata('t1', ('a1', 'a2')))
         check_that_filesystem_and_db_entries_match(1)
 
-
     @unittest.skipUnless(iswindows, 'Windows only')
     def test_windows_atomic_move(self):
         'Test book file open in another process when changing metadata'
@@ -137,7 +150,7 @@ class FilesystemTest(BaseTest):
         fpath = cache.format_abspath(1, 'FMT1')
         with open(fpath, 'rb') as f:
             with self.assertRaises(IOError):
-                cache.set_field('title', {1:'Moved'})
+                cache.set_field('title', {1: 'Moved'})
             with self.assertRaises(IOError):
                 cache.remove_books({1})
         self.assertNotEqual(cache.field_for('title', 1), 'Moved', 'Title was changed despite file lock')
@@ -185,9 +198,9 @@ class FilesystemTest(BaseTest):
     def test_long_filenames(self):
         ' Test long file names '
         cache = self.init_cache()
-        cache.set_field('title', {1:'a'*10000})
+        cache.set_field('title', {1: 'a' * 10000})
         self.assertLessEqual(len(cache.field_for('path', 1)), cache.backend.PATH_LIMIT * 2)
-        cache.set_field('authors', {1:'b'*10000})
+        cache.set_field('authors', {1: 'b' * 10000})
         self.assertLessEqual(len(cache.field_for('path', 1)), cache.backend.PATH_LIMIT * 2)
         fpath = cache.format_abspath(1, cache.formats(1)[0])
         self.assertLessEqual(len(fpath), len(cache.backend.library_path) + cache.backend.PATH_LIMIT * 4)
@@ -195,19 +208,19 @@ class FilesystemTest(BaseTest):
     def test_reserved_names(self):
         ' Test that folders are not created with a windows reserve name '
         cache = self.init_cache()
-        cache.set_field('authors', {1:'con'})
+        cache.set_field('authors', {1: 'con'})
         p = cache.field_for('path', 1).replace(os.sep, '/').split('/')
         self.assertNotIn('con', p)
 
     def test_fname_change(self):
         ' Test the changing of the filename but not the folder name '
         cache = self.init_cache()
-        title = 'a'*30 + 'bbb'
+        title = 'a' * 30 + 'bbb'
         cache.backend.PATH_LIMIT = 100
-        cache.set_field('title', {3:title})
+        cache.set_field('title', {3: title})
         cache.add_format(3, 'TXT', BytesIO(b'xxx'))
         cache.backend.PATH_LIMIT = 40
-        cache.set_field('title', {3:title})
+        cache.set_field('title', {3: title})
         fpath = cache.format_abspath(3, 'TXT')
         self.assertEqual(sorted([os.path.basename(fpath)]), sorted(os.listdir(os.path.dirname(fpath))))
 
@@ -232,10 +245,12 @@ class FilesystemTest(BaseTest):
                 ic = import_library('l', importer, idir)
                 self.assertEqual(cache.all_book_ids(), ic.all_book_ids())
                 for book_id in cache.all_book_ids():
-                    self.assertEqual(cache.cover(book_id), ic.cover(book_id), 'Covers not identical for book: %d' % book_id)
+                    self.assertEqual(cache.cover(book_id), ic.cover(book_id),
+                                     'Covers not identical for book: %d' % book_id)
                     for fmt in cache.formats(book_id):
                         self.assertEqual(cache.format(book_id, fmt), ic.format(book_id, fmt))
-                        self.assertEqual(cache.format_metadata(book_id, fmt)['mtime'], cache.format_metadata(book_id, fmt)['mtime'])
+                        self.assertEqual(cache.format_metadata(book_id, fmt)['mtime'],
+                                         cache.format_metadata(book_id, fmt)['mtime'])
                 bookdir = os.path.dirname(ic.format_abspath(1, '__COVER_INTERNAL__'))
                 self.assertEqual('exf', open(os.path.join(bookdir, 'exf')).read())
                 self.assertEqual('recurse', open(os.path.join(bookdir, 'sub', 'recurse')).read())
@@ -267,7 +282,7 @@ class FilesystemTest(BaseTest):
             self.assertEqual(one, two)
 
         def r(action='ignore', match_type='startswith', query=''):
-            return {'action':action, 'match_type':match_type, 'query':query}
+            return {'action': action, 'match_type': match_type, 'query': query}
 
         def c(*rules):
             return tuple(map(compile_rule, rules))
@@ -280,4 +295,5 @@ class FilesystemTest(BaseTest):
                 c(r(match_type='glob', query='*.md'), r(action='add', match_type='matches', query=r'.+\.other$')),
                 c(r(match_type='not_startswith', query='IGnored.', action='add'), r(query='ignored.md')),
         ):
-            q(['added.epub non-book.other'.split()], find_books_in_directory('', True, compiled_rules=rules, listdir_impl=lambda x: files))
+            q(['added.epub non-book.other'.split()],
+              find_books_in_directory('', True, compiled_rules=rules, listdir_impl=lambda x: files))

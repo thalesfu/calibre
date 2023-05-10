@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 
-__license__   = 'GPL v3'
+__license__ = 'GPL v3'
 __copyright__ = '2011, Kovid Goyal <kovid@kovidgoyal.net>'
 __docformat__ = 'restructuredtext en'
 
@@ -23,7 +23,6 @@ IMG = b'\xff\xd8\xff\xe0\x00\x10JFIF\x00\x01\x01\x01\x00`\x00`\x00\x00\xff\xe1\x
 
 
 class BaseTest(unittest.TestCase):
-
     longMessage = True
     maxDiff = None
 
@@ -48,11 +47,17 @@ class BaseTest(unittest.TestCase):
     def create_db(self, library_path):
         from calibre.library.database2 import LibraryDatabase2
         if LibraryDatabase2.exists_at(library_path):
-            raise ValueError('A library already exists at %r'%library_path)
+            raise ValueError('A library already exists at %r' % library_path)
         src = os.path.join(os.path.dirname(__file__), 'metadata.db')
         dest = os.path.join(library_path, 'metadata.db')
         shutil.copyfile(src, dest)
         db = LibraryDatabase2(library_path)
+
+        metadata = db.get_metadata(1)
+        metadata.title = '第一本书'
+        metadata.authors = ['作者']
+        db.set_metadata(1, metadata)
+
         db.set_cover(1, I('lt.png', data=True))
         db.set_cover(2, I('polish.png', data=True))
         db.add_format(1, 'FMT1', BytesIO(b'book1fmt1'), index_is_id=True)
@@ -110,12 +115,12 @@ class BaseTest(unittest.TestCase):
                 continue
             attr1, attr2 = getattr(mi1, attr), getattr(mi2, attr)
             if attr == 'formats':
-                attr1, attr2 = map(lambda x:tuple(x) if x else (), (attr1, attr2))
+                attr1, attr2 = map(lambda x: tuple(x) if x else (), (attr1, attr2))
             if isinstance(attr1, (tuple, list)) and 'authors' not in attr and 'languages' not in attr:
                 attr1, attr2 = set(attr1), set(attr2)
             self.assertEqual(attr1, attr2,
-                    '%s not the same: %r != %r'%(attr, attr1, attr2))
+                             '%s not the same: %r != %r' % (attr, attr1, attr2))
             if attr.startswith('#') and attr + '_index' not in exclude:
                 attr1, attr2 = mi1.get_extra(attr), mi2.get_extra(attr)
                 self.assertEqual(attr1, attr2,
-                    '%s {#extra} not the same: %r != %r'%(attr, attr1, attr2))
+                                 '%s {#extra} not the same: %r != %r' % (attr, attr1, attr2))
