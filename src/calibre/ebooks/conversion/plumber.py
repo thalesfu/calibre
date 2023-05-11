@@ -893,9 +893,14 @@ OptionRecommendation(name='search_replace',
             rec = self.get_option_by_name(name)
             if rec is not None and rec.level <= level and rec.level < rec.HIGH:
                 changed = not eq(name, rec.recommended_value, val)
-                rec.recommended_value = val
+                if val == "仓耳今楷05 W04":
+                    self.log.warning("修正字体", name, val)
+                    rec.recommended_value = "仓耳今楷05"
+                else:
+                    rec.recommended_value = val
                 rec.level = level
                 if changed:
+                    self.log.warning(rec.option.name + ' ' + str(rec.recommended_value) + ' ' + str(val), "\n")
                     self.changed_options.add(rec)
 
     def opts_to_mi(self, mi):
